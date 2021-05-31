@@ -1,10 +1,10 @@
-import licel_controller.settings
-from licel_controller.interface import Controller
+import licelcontroller.settings
+from licelcontroller.interface import Controller
 import time
 
 # override settings
-licel_controller.settings.HOST = "10.49.234.234"
-licel_controller.settings.PORT = 2055
+licelcontroller.settings.HOST = "10.49.234.234"
+licelcontroller.settings.PORT = 2055
 
 if __name__ == '__main__':
     c = Controller()

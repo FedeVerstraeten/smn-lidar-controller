@@ -2,7 +2,7 @@
 import asyncio
 from multiprocessing import Pool
 
-from licel_controller import settings, tr_commands
+from licelcontroller import settings, tr_commands
 
 
 class Controller():
