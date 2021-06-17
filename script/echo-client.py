@@ -12,12 +12,15 @@ def command_to_licel(licelcommand):
     print('Command to execute:',licelcommand)
     s.sendall(bytes(licelcommand+'\r\n','utf-8'))
     data = s.recv(1024)
+    print("Len:",len(data),"type:",type(data))
   return data
 
 if __name__ == '__main__':
   if len(sys.argv) > 1:
     rsp=repr(command_to_licel(str(sys.argv[1])))
     print('Received',rsp) 
+    with open('outputlicel', 'w') as f:
+      f.write(rsp)
   else:
     print('ERROR arguments needed')
 
