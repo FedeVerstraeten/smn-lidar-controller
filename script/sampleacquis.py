@@ -24,7 +24,8 @@ HOST = '127.0.0.1'
 PORT = 631
 BIN_LONG_TRANCE = 2000
 CRLF = '\r\n'
-TIMEOUT = 1 # seconds
+TIMEOUT = 5 # seconds
+BUFFSIZE = 8192 # 4096*2 = 8192 bytes = 8kbytes
 
 ## Input Ranges
 MILLIVOLT500 = 0
@@ -46,186 +47,159 @@ MEM_B = 1
 
 
 # Functions
-def command_to_licel(sock,command):
+def command_to_licel(sock,command,wait):
   try:
-    resp=None
+    response=None
     print('Sending:',command)
+    sock.send(bytes(command + CRLF,'utf-8'))
     sock.settimeout(TIMEOUT)
-    sock.sendall(bytes(command + CRLF,'utf-8'))
-    #time.sleep(2) # wait TCP adquisition
-    resp = sock.recv(8192).decode() # 8192 = 4096 * 2
-    print("Received from server:",resp)
-    print("msg len:",len(resp),"type:",type(resp))
+    
+    if wait!=0:
+      time.sleep(wait) # wait TCP adquisition
+    
+    response = sock.recv(BUFFSIZE).decode()
+    print("Received from server:",response)
+    print("msg len:",len(response),"type:",type(response))
 
   except Exception as e:
     raise e
   finally:
-    return resp
+    return response
 
 def licel_selectTR(sock,tr):
-
-  command = "SELECT " + str(tr)
-  resp = command_to_licel(sock,command)
+  command = "SELECT" + " " + str(tr)
+  response = command_to_licel(sock,command)
   
-  if "executed" not in resp:
+  if "executed" not in response:
     print("Licel_TCPIP_SelectTR - Error 5083:", command)
     return -5083
   else:
-    return resp
+    return 0
 
-def licel_setInputRange(sock,MILLIVOLT500):
-  # char command[1000];
-  # sprintf(command,"RANGE  %d\r\n", inputRange);
-  # writeCommand(s, command);
-  # int rv = readResponse(s, command, 200, 1000);
-  # if (rv < 0)
-  #   return rv;
-  #  if (!strstr(command,"set to")) {
-  #    printf("\r\nLicel_TCPIP_SetInputRange - Error 5097 :%s", command);
-  #    return -5097;
-  # }
-  # return 0;
-  pass
+def licel_setInputRange(sock,inputrange):
+  command = "RANGE"+ " " + inputrange
+  response = command_to_licel(sock,command,0)
 
-def licel_setThresholdMode(sock,THRESHOLD_LOW):
-  # char command[1000];
-  # sprintf(command,"THRESHOLD %d\r\n", thresholdMode);
-  # writeCommand(s, command);
-  # int rv = readResponse(s, command, 200, 1000);
-  # if (rv < 0)
-  #   return rv;
-  #  if (!strstr(command,"THRESHOLD")) {
-  #    printf("\r\nLicel_TCPIP_SetThresholdMode - Error 5098 :%s", command);
-  #    return -5098;
-  # }
-  # return 0; 
-  pass
+  if "set to" not in response:
+    print("Licel_TCPIP_SetInputRange - Error 5097:", command)
+    return -5097
+  else:
+    return 0
 
-def licel_setDiscriminatorLevel(sock,DISCRIMINATOR_LEVEL):
-  # char command[1000];
-  # sprintf(command,"DISC %d\r\n", discriminatorLevel);
-  # writeCommand(s, command);
-  # int rv = readResponse(s, command, 200, 1000);
-  # if (rv < 0)
-  #   return rv;
-  #  if (!strstr(command,"set to")) {
-  #    printf("\r\nLicel_TCPIP_SetDiscriminatorLevel - Error 5096 :%s", command);
-  #    return -5096;
-  # }
-  # return 0; 
-  pass
+def licel_setThresholdMode(sock,thresholdmode):
+  command = "THRESHOLD"+ " " + thresholdmode
+  response = command_to_licel(sock,command,0)
 
+  if "set to" not in response:
+    print("Licel_TCPIP_SetThresholdMode - Error 5098:", command)
+    return -5098
+  else:
+    return 0
+
+def licel_setDiscriminatorLevel(sock,discriminatorlevel):
+  command = "DISC"+ " " + discriminatorlevel
+  response = command_to_licel(sock,command,0)
+
+  if "set to" not in response:
+    print("Licel_TCPIP_SetDiscriminatorLevel - Error 5096:", command)
+    return -5096
+  else:
+    return 0
 
 def licel_msDelay(delay):
-#   #ifdef _CVI_
-#   Delay((double) Milliseconds/1000.0);
-# #else
-#   Sleep(Milliseconds);
-# #end
-  pass
+  time.sleep(delay/1000) # delay on seconds
+
+def licel_clearMemory(sock):
+  command = "CLEAR"
+  response = command_to_licel(sock,command,0)
+
+  if "executed" not in response:
+    print("LLicel_TCPIP_ClearMemory - Error 5092:", response)
+    return -5092
+  else:
+    return 0
 
 def licel_startAcquisition(sock):
-  # writeCommand(s, "START \r\n");
-  # char response[1000];
-  # int rv = readResponse(s, response, 200, 1000);
-  # if (rv < 0)
-  #   return rv;
-  # if (strcmp(response,"START executed")) {
-  #   printf("\r\nLicel_TCPIP_SingleShot - Error 5095 :%s", response);
-  #   return -5095;
-  # }
-  # return 0;
-  pass
+  command = "START"
+  response = command_to_licel(sock,command,0)
+
+  if "executed" not in response:
+    print("Licel_TCPIP_SingleShot - Error 5095:", response)
+    return -5095
+  else:
+    return 0
 
 def licel_stopAcquisition(sock):
-  # writeCommand(s, "START \r\n");
-  # char response[1000];
-  # int rv = readResponse(s, response, 200, 1000);
-  # if (rv < 0)
-  #   return rv;
-  # if (strcmp(response,"START executed")) {
-  #   printf("\r\nLicel_TCPIP_SingleShot - Error 5095 :%s", response);
-  #   return -5095;
-  # }
-  # return 0;
-  pass
+  command = "STOP"
+  response = command_to_licel(sock,command,0)
+
+  if "executed" not in response:
+    print("Licel_TCPIP_SingleShot - Error 5095:", response)
+    return -5095
+  else:
+    return 0
 
 def licel_waitForReady(sock,delay):
-# #ifdef WIN32
-#   DWORD start = GetTickCount();
-# #else
-#   struct timeb t1, t2;
-#   double duration;
-#   ftime(&t1);
-# #endif
-#   do {
-#     long int shotNumber;
-#     int memory;
-#     int acquisitionState, recording;
-#     int rv = Licel_TCPIP_GetStatus(s, &shotNumber, &memory, &acquisitionState, &recording);
-#     if (rv < 0)
-#       return rv;
-#     if (!acquisitionState)
-#       return rv;
-# #ifdef WIN32
-#   } while (start + Delay > GetTickCount());
-# #else
-#   ftime(&t1);
-#   duration = (1000.0*(t2.time-t1.time)+t2.millitm-t1.millitm);  
-# } while (duration < Delay); // + (start.millitm - now.millitm));  
-# #endif
-#   return -5700;
+# start_ms = round(time.time()*1000) # epcoch system time in ms
+# while(start_ms + delay > round(time.time()*1000)):
   pass
 
-def  licel_getStatus(sock):
-  # writeCommand(s, "STAT?\r\n");
-  # char response[1000];
-  # int rv = readResponse(s, response, 200, 1000);
-  # if (rv < 0)
-  #   return rv;
-  # if (strstr(response,"Shots")) {
-  #   *memory = 0;
-  #   *acquisitionState = false;
-  #   * recording = false;
-  #   sscanf(response, "Shots %ld", shotNumber);
-  #   if (strstr(response,"Armed"))
-  #     *acquisitionState = true;
-  #   if (strstr(response,"Armed"))
-  #     *recording = true;
-  #   if (strstr(response,"MemB"))
-  #     *memory = 1;
-  #   return 0;
-  # }
-  # else {
-  #   printf("\r\nLicel_TCPIP_GetStatus - Error 5765 :%s", response);
-  #   return -5765;
-  # }
-  pass
+def licel_parseStatus(sock):
+  command = "STAT?"
+  response = command_to_licel(sock,command,0)
+  memory = 0
+  acquisitionstate = False
+  recording = False
+  shotnumber = 0
 
-def licel_getDatasets(sock,tr,dataset,bin,mem):
-  # char command[1000];
-  # sprintf(command,"DATA? %d %d", device, numberToRead);
-  # switch (dataSet) {
-  # case 0: 
-  #   strcat(command, " PHO");
-  #   break;
-  # case 1: 
-  #   strcat(command, " LSW");
-  #   break;
-  # case 2:
-  #   strcat(command, " MSW");
-  #   break;
-  # }
-  # if (!Memory)
-  #   strcat (command, " A");
-  # else
-  #   strcat (command, " B");
-  # strcat(command,"\r\n");
-  # int rv = writeCommand(s, command);
-  # if (rv < 0)
-  #   return rv;
-  #  return Licel_TCPIP_ReadData(s, numberToRead, data);
-  pass
+  if "Shots" in response:
+    shotnumber = int(response.split()[1])
+    
+    if "Armed" in response:
+      acquisitionstate = True
+      recording = True
+
+    if "MemB" in response:
+      memory = 1
+
+    #TODO class attributes STAT
+    return shotnumber,memory,acquisitionstate,recording 
+
+  else:
+    return 0,0,False,False
+
+def licel_getStatus(sock):
+  command = "STAT?"
+  response = command_to_licel(sock,command,0)
+
+  if "Shots" in response:
+    return 0
+  else:
+    print("Licel_TCPIP_GetStatus - Error 5765:", response)
+    return -5765
+
+def licel_getDatasets(sock,device,dataset,bins,memory):
+  command = "DATA?" + " " + str(device) \
+                    + " " + str(bins) \
+                    + " " + str(dataset) \
+                    + " " + str(memory)
+  delay = 2 # seconds
+  try:
+    while(len(dataout) < 2*bins):
+      print('Sending:',command)
+      sock.send(bytes(command + CRLF,'utf-8'))
+      sock.settimeout(TIMEOUT)
+      time.sleep(delay) # wait TCP adquisition 
+    
+      databuff = sock.recv(BUFFSIZE)
+      print("msg len:",len(response),"type:",type(response))
+      delay += 1
+
+  except Exception as e:
+    raise e
+  
+  dataout = np.frombuffer(databuff,dtype=np.uint32)
+  return dataout
 
 def licel_combineAnalogDatasets():
   # int i;
@@ -298,18 +272,19 @@ if __name__ == '__main__':
 
   ## wait for one sec
   ## this would be the loop start for continous acquisitions
-  
+  licel_clearMemory(sock)
   licel_startAcquisition(sock)
 
   licel_msDelay(1000) # wait 1000ms
   licel_stopAcquisition(sock) # stop the TR
-  licel_waitForReady(sock,100) # wait till it returns to the idle state
+  # licel_waitForReady(sock,100) # wait till it returns to the idle state
 
   ## get the shotnumber
   ## iCycles must be long int
-  iCycles,iMemory,iAcq_State,iRecording = licel_getStatus(sock) 
-  if (iCycles > 1):
-    iCycles -= 2;
+  if licel_getStatus(sock) == 0:
+    iCycles,iMemory,iAcq_State,iRecording = licel_pasrseStatus(sock) 
+    if (iCycles > 1):
+      iCycles -= 2;
 
   # READ FROM THE TR
 
@@ -317,29 +292,29 @@ if __name__ == '__main__':
   ## buffer preparation
   iNumber = BIN_LONG_TRANCE ## read a 2000 bin long trace
     
-  data_LSW = np.zeros(2*(iNumber+1),np.uint32)
-  data_MSW = np.zeros(2*(iNumber+1),np.uint32)
+  data_lsw = np.zeros(2*(iNumber+1),np.uint32)
+  data_msw = np.zeros(2*(iNumber+1),np.uint32)
 
-  data_LSW = licel_getDatasets(sock,tr,LSW,iNumber+1,MEM_A)
-  data_MSW = licel_getDatasets(sock,tr,MSW,iNumber+1,MEM_B)
+  data_lsw = licel_getDatasets(sock,tr,"LSW",iNumber+1,"A")
+  data_msw = licel_getDatasets(sock,tr,"MSW",iNumber+1,"B")
   
   ## combine them and transfer it into mV
   data_accu = np.zeros(iNumber,np.uint64) # combined binary data
   data_clip = np.zeros(iNumber,np.uint32) # clip information
   data_phys = np.zeros(iNumber,np.float64) # normalized to the shotnumber (double)
-  data_mV = np.zeros(iNumber,np.float64) # and mV data (double)
+  data_mv = np.zeros(iNumber,np.float64) # and mV data (double)
 
-  data_accu,data_clip = licel_combineAnalogDatasets(data_LSW, data_MSW, iNumber+1)
+  data_accu,data_clip = licel_combineAnalogDatasets(data_lsw, data_msw, iNumber+1)
   
   # Normalizes the accumulated Data with respect to the number of cycles
   data_phys = licel_normalizeData(data_accu, iNumber, iCycles)
   
   # data to mV
-  data_mV = licel_scaleAnalogData(data_phys, iNumber, MILLIVOLT500) 
+  data_mv = licel_scaleAnalogData(data_phys, iNumber, MILLIVOLT500) 
   
   # DUMP THE DATA INTO A FILE
   with open('analog.txt', 'w') as file: # or analog.dat 'wb'
     # for (i=0; i< iNumber; i++) {
-    #   fprintf(fp,"%g\n", data_mV[i]);
+    #   fprintf(fp,"%g\n", data_mv[i]);
     # }
     file.write(rsp)
