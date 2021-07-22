@@ -201,6 +201,8 @@ def licel_getDatasets(sock,device,dataset,bins,memory):
   dataout = np.frombuffer(databuff,dtype=np.uint32)
   return dataout
 
+# (unsigned short* i_lsw,unsigned short* i_msw,int iNumber, long *lAccumulated, short *iClipping)
+
 def licel_combineAnalogDatasets():
   # int i;
   # for(i=1;i<iNumber;i++)
@@ -210,37 +212,34 @@ def licel_combineAnalogDatasets():
   # }
   pass
 
-def licel_normalizeData():
-  # int i;
-  # if(iCycles==0)
-  #   iCycles=1;
-  # for(i=0;i<iNumber;i++)
-  # {
-  #   dNormalized[i]=lAccumulated[i]/(double) iCycles;
-  # }
-  pass
+def licel_normalizeData(lAccumulated, iNumber, iCycles):
+  
+  dNormalized=np.zeros(iNumber,dtype=np.float64)
+  
+  if iCycles==0:
+    dNormalized=np.array(lAccumulated,dtype=np.float64)
+  else:
+    dNormalized=np.array(lAccumulated,dtype=np.float64)/iCycles
+    
+  return dNormalized
 
-def licel_scaleAnalogData():
-  # int i;
-  # double dScale;
-  # switch(iRange)
-  # {
-  #   case MILLIVOLT500:
-  #              dScale=500.0/4096.0;
-  #           break;
-  #   case MILLIVOLT100:
-  #              dScale=100.0/4096.0;
-  #           break;
-  #   case MILLIVOLT20:  dScale=20.0/4096.0;
-  #           break;
-  #   default:      dScale=1.0;
-  #           break;
-  # }
-  # for(i=0;i<iNumber;i++)
-  # {
-  #   dmVData[i]=dScale*dNormalized[i];
-  # }
-  pass
+def licel_scaleAnalogData(dNormalized, iNumber, iRange):
+
+  scale = 0.0
+
+  if iRange == MILLIVOLT500:
+    scale=500.0/4096.0
+  elif iRange == MILLIVOLT100:
+    scale=100.0/4096.0
+  elif iRange == MILLIVOLT20
+    scale=20.0/4096.0
+  else
+    scale=1.0
+
+  # scaling 
+  data_mv = np.array(dNormalized)*scale
+  
+  return data_mv
 
 # Main
 
@@ -318,3 +317,13 @@ if __name__ == '__main__':
     #   fprintf(fp,"%g\n", data_mv[i]);
     # }
     file.write(rsp)
+
+
+  # Plot
+  t = np.arange(0, len(data_mv), 1)
+  fig, ax = plt.subplots()
+  ax.plot(t, data_mv)
+  ax.set(xlabel='time (s)', ylabel='voltage (mV)',title='SMN LICEL')
+  ax.grid()
+  fig.savefig("test.png")
+  plt.show()
