@@ -204,14 +204,14 @@ def licel_getDatasets(sock,device,dataset,bins,memory):
 
 # (unsigned short* i_lsw,unsigned short* i_msw,int iNumber, long *lAccumulated, short *iClipping)
 
-def licel_combineAnalogDatasets():
-  # int i;
-  # for(i=1;i<iNumber;i++)
-  # {
-  #   lAccumulated[i-1]=(long) i_lsw[i] + (((long) i_msw[i]&0xFF)<<16);
-  #   iClipping[i-1]=(short) ((i_msw[i]&0x100)>>8);
-  # }
-  pass
+def licel_combineAnalogDatasets(i_lsw,i_msw.iNumber):
+  MSW_ACUM_MASK=0xFF
+  LSW_CLIP_MASK=0x100
+
+  accum = np.left_shift(i_msw & MSW_ACUM_MASK, 16) + i_lsw
+  clip = np.right_shift(i_msw & LSW_CLIP_MASK, 8)
+ 
+  return accum.astype(np.float64),clip.astype(np.uint16)
 
 def licel_normalizeData(lAccumulated, iNumber, iCycles):
   
@@ -292,15 +292,15 @@ if __name__ == '__main__':
   ## buffer preparation
   iNumber = BIN_LONG_TRANCE ## read a 2000 bin long trace
     
-  data_lsw = np.zeros(2*(iNumber+1),np.uint32)
-  data_msw = np.zeros(2*(iNumber+1),np.uint32)
+  data_lsw = np.zeros(2*(iNumber+1),np.uint16)
+  data_msw = np.zeros(2*(iNumber+1),np.uint16)
 
   data_lsw = licel_getDatasets(sock,tr,"LSW",iNumber+1,"A")
   data_msw = licel_getDatasets(sock,tr,"MSW",iNumber+1,"B")
   
   ## combine them and transfer it into mV
   data_accu = np.zeros(iNumber,np.uint64) # combined binary data
-  data_clip = np.zeros(iNumber,np.uint32) # clip information
+  data_clip = np.zeros(iNumber,np.uint16) # clip information
   data_phys = np.zeros(iNumber,np.float64) # normalized to the shotnumber (double)
   data_mv = np.zeros(iNumber,np.float64) # and mV data (double)
 
@@ -314,10 +314,7 @@ if __name__ == '__main__':
   
   # DUMP THE DATA INTO A FILE
   with open('analog.txt', 'w') as file: # or analog.dat 'wb'
-    # for (i=0; i< iNumber; i++) {
-    #   fprintf(fp,"%g\n", data_mv[i]);
-    # }
-    file.write(rsp)
+    np.savetxt(file,data_mv,delimiter=',')
 
 
   # Plot
