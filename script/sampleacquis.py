@@ -18,10 +18,10 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 # Global parameters
-# HOST = '10.49.234.234'
-# PORT = 2055
-HOST = '127.0.0.1'
-PORT = 631
+HOST = '10.49.234.234'
+PORT = 2055
+#HOST = '127.0.0.1'
+#PORT = 631
 BIN_LONG_TRANCE = 2000
 CRLF = '\r\n'
 TIMEOUT = 5 # seconds
@@ -68,7 +68,7 @@ def command_to_licel(sock,command,wait):
 
 def licel_selectTR(sock,tr):
   command = "SELECT" + " " + str(tr)
-  response = command_to_licel(sock,command)
+  response = command_to_licel(sock,command,0)
   
   if "executed" not in response:
     print("Licel_TCPIP_SelectTR - Error 5083:", command)
@@ -184,15 +184,16 @@ def licel_getDatasets(sock,device,dataset,bins,memory):
                     + " " + str(dataset) \
                     + " " + str(memory)
   delay = 2 # seconds
+  databuff=b'0'
   try:
-    while(len(dataout) < 2*bins):
+    while(len(databuff) < 2*bins):
       print('Sending:',command)
       sock.send(bytes(command + CRLF,'utf-8'))
       sock.settimeout(TIMEOUT)
       time.sleep(delay) # wait TCP adquisition 
     
       databuff = sock.recv(BUFFSIZE)
-      print("msg len:",len(response),"type:",type(response))
+      print("databuff len:",len(databuff))
       delay += 1
 
   except Exception as e:
@@ -231,9 +232,9 @@ def licel_scaleAnalogData(dNormalized, iNumber, iRange):
     scale=500.0/4096.0
   elif iRange == MILLIVOLT100:
     scale=100.0/4096.0
-  elif iRange == MILLIVOLT20
+  elif iRange == MILLIVOLT20:
     scale=20.0/4096.0
-  else
+  else:
     scale=1.0
 
   # scaling 
@@ -281,7 +282,7 @@ if __name__ == '__main__':
   ## get the shotnumber
   ## iCycles must be long int
   if licel_getStatus(sock) == 0:
-    iCycles,iMemory,iAcq_State,iRecording = licel_pasrseStatus(sock) 
+    iCycles,iMemory,iAcq_State,iRecording = licel_parseStatus(sock) 
     if (iCycles > 1):
       iCycles -= 2;
 
