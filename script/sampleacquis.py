@@ -22,7 +22,7 @@ HOST = '10.49.234.234'
 PORT = 2055
 #HOST = '127.0.0.1'
 #PORT = 631
-BIN_LONG_TRANCE = 2000
+BIN_LONG_TRANCE = 4000
 CRLF = '\r\n'
 TIMEOUT = 5 # seconds
 BUFFSIZE = 8192 # 4096*2 = 8192 bytes = 8kbytes
@@ -199,12 +199,12 @@ def licel_getDatasets(sock,device,dataset,bins,memory):
   except Exception as e:
     raise e
   
-  dataout = np.frombuffer(databuff,dtype=np.uint32)
+  dataout = np.frombuffer(databuff,dtype=np.uint16)
   return dataout
 
 # (unsigned short* i_lsw,unsigned short* i_msw,int iNumber, long *lAccumulated, short *iClipping)
 
-def licel_combineAnalogDatasets(i_lsw,i_msw.iNumber):
+def licel_combineAnalogDatasets(i_lsw,i_msw,iNumber):
   MSW_ACUM_MASK=0xFF
   LSW_CLIP_MASK=0x100
 
@@ -275,7 +275,7 @@ if __name__ == '__main__':
   licel_clearMemory(sock)
   licel_startAcquisition(sock)
 
-  licel_msDelay(1000) # wait 1000ms
+  licel_msDelay(2000) # wait 1000ms
   licel_stopAcquisition(sock) # stop the TR
   # licel_waitForReady(sock,100) # wait till it returns to the idle state
 
@@ -321,7 +321,7 @@ if __name__ == '__main__':
   t = np.arange(0, len(data_mv), 1)
   fig, ax = plt.subplots()
   ax.plot(t, data_mv)
-  ax.set(xlabel='time (s)', ylabel='voltage (mV)',title='SMN LICEL')
+  ax.set(xlabel='bins', ylabel='voltage (mV)',title='SMN LICEL')
   ax.grid()
   fig.savefig("test.png")
   plt.show()
