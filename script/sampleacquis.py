@@ -296,7 +296,7 @@ if __name__ == '__main__':
   data_msw = np.zeros(2*(iNumber+1),np.uint16)
 
   data_lsw = licel_getDatasets(sock,tr,"LSW",iNumber+1,"A")
-  data_msw = licel_getDatasets(sock,tr,"MSW",iNumber+1,"B")
+  data_msw = licel_getDatasets(sock,tr,"MSW",iNumber+1,"A")
   
   ## combine them and transfer it into mV
   data_accu = np.zeros(iNumber,np.uint64) # combined binary data
