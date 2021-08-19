@@ -226,8 +226,9 @@ def licel_normalizeData(lAccumulated, iNumber, iCycles):
 
 def licel_scaleAnalogData(dNormalized, iNumber, iRange):
 
+  # 2^12 = 4096 bits max Licel ADC counts 
+  
   scale = 0.0
-
   if iRange == MILLIVOLT500:
     scale=500.0/4096.0
   elif iRange == MILLIVOLT100:
