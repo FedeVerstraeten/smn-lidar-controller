@@ -10,10 +10,13 @@ This program will:
 """
 
 # Libraries
-
+import os
 import sys
-import socket
+# __dir__ = os.path.dirname(__file__)
+# path = os.path.join(__dir__,'packages')
+# sys.path.insert(0,path)
 import time
+import socket
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -26,6 +29,7 @@ BIN_LONG_TRANCE = 4000
 CRLF = '\r\n'
 TIMEOUT = 5 # seconds
 BUFFSIZE = 8192 # 4096*2 = 8192 bytes = 8kbytes
+SHOTSDELAY = 10000 # wait 10s = 300shots/30Hz
 
 ## Input Ranges
 MILLIVOLT500 = 0
@@ -77,7 +81,7 @@ def licel_selectTR(sock,tr):
     return 0
 
 def licel_setInputRange(sock,inputrange):
-  command = "RANGE"+ " " + inputrange
+  command = "RANGE"+ " " + str(inputrange)
   response = command_to_licel(sock,command,0)
 
   if "set to" not in response:
@@ -205,11 +209,19 @@ def licel_getDatasets(sock,device,dataset,bins,memory):
 # (unsigned short* i_lsw,unsigned short* i_msw,int iNumber, long *lAccumulated, short *iClipping)
 
 def licel_combineAnalogDatasets(i_lsw,i_msw,iNumber):
-  MSW_ACUM_MASK=0xFF
+  MSW_ACUM_MASK=0x00FF
   LSW_CLIP_MASK=0x100
 
-  accum = np.left_shift(i_msw & MSW_ACUM_MASK, 16) + i_lsw
-  clip = np.right_shift(i_msw & LSW_CLIP_MASK, 8)
+  accum=np.zeros(len(i_msw)-1,np.uint32)
+  msw_aux=np.array(i_msw,dtype=np.uint32)
+  lsw_aux=np.array(i_lsw,dtype=np.uint32)
+
+  for i in range(1,len(i_msw)):
+    accum[i-1] = np.left_shift(msw_aux[i] & MSW_ACUM_MASK, 16) + lsw_aux[i]
+  
+  #accum = (msw_aux[1:] & MSW_ACUM_MASK) << 16 + lsw_aux[1:]
+
+  clip = np.right_shift(i_msw[1:] & LSW_CLIP_MASK, 8)
  
   return accum.astype(np.float64),clip.astype(np.uint16)
 
@@ -226,9 +238,10 @@ def licel_normalizeData(lAccumulated, iNumber, iCycles):
 
 def licel_scaleAnalogData(dNormalized, iNumber, iRange):
 
-  # 2^12 = 4096 bits max Licel ADC counts 
+  # 2^12 = 4096 bits max Licel ADC counts
   
   scale = 0.0
+
   if iRange == MILLIVOLT500:
     scale=500.0/4096.0
   elif iRange == MILLIVOLT100:
@@ -263,7 +276,7 @@ if __name__ == '__main__':
 
   tr = 0 # using the first Transient Recorder
   licel_selectTR(sock,tr)
-  # licel_setInputRange(sock,MILLIVOLT500)
+  licel_setInputRange(sock,MILLIVOLT500)
   # licel_setThresholdMode(sock,THRESHOLD_LOW)
   # licel_setDiscriminatorLevel(sock,DISCRIMINATOR_LEVEL)
   
@@ -276,7 +289,7 @@ if __name__ == '__main__':
   licel_clearMemory(sock)
   licel_startAcquisition(sock)
 
-  licel_msDelay(2000) # wait 1000ms
+  licel_msDelay(SHOTSDELAY)
   licel_stopAcquisition(sock) # stop the TR
   # licel_waitForReady(sock,100) # wait till it returns to the idle state
 
@@ -319,9 +332,12 @@ if __name__ == '__main__':
 
 
   # Plot
+  print("cycles:",iCycles)
   t = np.arange(0, len(data_mv), 1)
   fig, ax = plt.subplots()
   ax.plot(t, data_mv)
+
+  
   ax.set(xlabel='bins', ylabel='voltage (mV)',title='SMN LICEL')
   ax.grid()
   fig.savefig("test.png")
