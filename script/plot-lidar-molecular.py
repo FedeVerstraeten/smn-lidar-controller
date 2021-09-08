@@ -5,6 +5,10 @@ from scipy import constants
 from scipy import integrate
 from scipy.interpolate import interp1d
 
+# Current surface atmospheric conditions
+SURFACE_TEMP = 300 # [K] 27C
+SURFACE_PRESS = 1024 # [hPa]
+
 # load data
 LIDAR_FILE='./US-StdA_DB_CEILAP.csv'
 data_csv = pd.read_csv(LIDAR_FILE,sep=',',header=None)
@@ -26,6 +30,11 @@ temp_highres = temp_spline(height_highres)
 
 press_spline = interp1d(height_lowres, press_lowres, kind='cubic')
 press_highres = press_spline(height_highres)
+
+# Scaling the temperature and pressure profiles in the model
+# with current surface conditions
+temp_highres = SURFACE_TEMP * (temp_highres/temp_highres[0])
+press_highres = SURFACE_PRESS * (press_highres/press_highres[0])
 
 # alpha y beta
 kboltz=constants.k
