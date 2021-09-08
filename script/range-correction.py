@@ -2,13 +2,17 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
-LIDAR_FILE='/home/fverstra/Desktop/analog_dia_20mV.txt'
+LIDAR_FILE='./analog.txt'
 
 data_csv = pd.read_csv(LIDAR_FILE,sep='\n',header=None)
 data=pd.DataFrame(data_csv)
 
 y = np.array(data[0])
+y=y[10:] # offset correction
+
 x = np.arange(0, len(y), 1)
+
+ 
 
 # LiDAR signal range correction since bin number 1000
 
