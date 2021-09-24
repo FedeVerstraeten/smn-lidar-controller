@@ -25,7 +25,7 @@ class licelcontroller:
 
   # ATTRIBUTES:
 
-  def __init__(self,tr):
+  def __init__(self):
 
     # TCP/IP socket
     self.host = '10.49.234.234'
@@ -34,7 +34,7 @@ class licelcontroller:
     self.buffersize = 8192 # 4096*2 = 8192 bytes = 8kbytes
     
     # Licel parameters
-    self.transient_recorder = tr
+    self.transient_recorder = 0 
     self.bin_long_trace = 4000
     self.shots_delay = 10000 # wait 10s = 300shots/30Hz
     self.timeout = 5 # seconds
