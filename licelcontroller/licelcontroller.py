@@ -30,7 +30,7 @@ class licelcontroller:
     # TCP/IP socket
     self.host = '10.49.234.234'
     self.port = 2055
-    self.sock = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
+    self.sock = None
     self.buffersize = 8192 # 4096*2 = 8192 bytes = 8kbytes
     
     # Licel parameters
@@ -39,10 +39,15 @@ class licelcontroller:
     self.shots_delay = 10000 # wait 10s = 300shots/30Hz
     self.timeout = 5 # seconds
 
+    self.memory = 0
+    self.acquisitionstate = False
+    self.recording = False
+    self.shotnumber = 0
+
   # METHODS:
   
   def openConnection(self,host,port):
-    #self.sock = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
+    self.sock = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
     server_address = (host,port)
   
     try:
@@ -70,8 +75,8 @@ class licelcontroller:
     finally:
       return response
 
-  def selectTR(self,tr):
-    command = "SELECT" + " " + str(tr)
+  def selectTR(self,transientrecorder):
+    command = "SELECT" + " " + str(transientrecorder)
     waitsecs = 0
     response = self.runCommand(command,waitsecs)
   
@@ -81,7 +86,7 @@ class licelcontroller:
     else:
       return 0
 
-  def setInputRange(self,sock,inputrange):
+  def setInputRange(self,inputrange):
     command = "RANGE"+ " " + str(inputrange)
     waitsecs = 0
     response = self.runCommand(command,waitsecs)
@@ -92,7 +97,7 @@ class licelcontroller:
     else:
       return 0
 
-  def setThresholdMode(sock,thresholdmode):
+  def setThresholdMode(self,thresholdmode):
     command = "THRESHOLD"+ " " + thresholdmode
     waitsecs = 0
     response = self.runCommand(command,waitsecs)
@@ -103,87 +108,79 @@ class licelcontroller:
     else:
       return 0
 
-  # def licel_setDiscriminatorLevel(sock,discriminatorlevel):
-  #   command = "DISC"+ " " + discriminatorlevel
-  #   response = command_to_licel(sock,command,0)
+  def setDiscriminatorLevel(self,discriminatorlevel):
+    command = "DISC"+ " " + discriminatorlevel
+    waitsecs = 0
+    response = self.runCommand(command,waitsecs)
 
-  #   if "set to" not in response:
-  #     print("Licel_TCPIP_SetDiscriminatorLevel - Error 5096:", command)
-  #     return -5096
-  #   else:
-  #     return 0
+    if "set to" not in response:
+      print("Licel_TCPIP_SetDiscriminatorLevel - Error 5096:", command)
+      return -5096
+    else:
+      return 0
 
-  # def licel_msDelay(delay):
-  #   time.sleep(delay/1000) # delay on seconds
 
-  # def licel_clearMemory(sock):
-  #   command = "CLEAR"
-  #   response = command_to_licel(sock,command,0)
+  def clearMemory(self):
+    command = "CLEAR"
+    waitsecs = 0
+    response = self.runCommand(command,waitsecs)
 
-  #   if "executed" not in response:
-  #     print("LLicel_TCPIP_ClearMemory - Error 5092:", response)
-  #     return -5092
-  #   else:
-  #     return 0
+    if "executed" not in response:
+      print("Licel_TCPIP_ClearMemory - Error 5092:", response)
+      return -5092
+    else:
+      return 0
 
-  # def licel_startAcquisition(sock):
-  #   command = "START"
-  #   response = command_to_licel(sock,command,0)
+  def startAcquisition(self):
+    command = "START"
+    waitsecs = 0
+    response = self.runCommand(command,waitsecs)
 
-  #   if "executed" not in response:
-  #     print("Licel_TCPIP_SingleShot - Error 5095:", response)
-  #     return -5095
-  #   else:
-  #     return 0
+    if "executed" not in response:
+      print("Licel_TCPIP_SingleShot - Error 5095:", response)
+      return -5095
+    else:
+      return 0
 
-  # def licel_stopAcquisition(sock):
-  #   command = "STOP"
-  #   response = command_to_licel(sock,command,0)
+  def stopAcquisition(self):
+    command = "STOP"
+    waitsecs = 0
+    response = self.runCommand(command,waitsecs)
 
-  #   if "executed" not in response:
-  #     print("Licel_TCPIP_SingleShot - Error 5095:", response)
-  #     return -5095
-  #   else:
-  #     return 0
+    if "executed" not in response:
+      print("Licel_TCPIP_SingleShot - Error 5095:", response)
+      return -5095
+    else:
+      return 0
 
-  # def licel_waitForReady(sock,delay):
-  # # start_ms = round(time.time()*1000) # epcoch system time in ms
-  # # while(start_ms + delay > round(time.time()*1000)):
-  #   pass
+  def getStatus(sock):
+  # def parseStatus(sock):
+    command = "STAT?"
+    waitsecs = 0
+    response = self.runCommand(command,waitsecs)
 
-  # def licel_parseStatus(sock):
-  #   command = "STAT?"
-  #   response = command_to_licel(sock,command,0)
-  #   memory = 0
-  #   acquisitionstate = False
-  #   recording = False
-  #   shotnumber = 0
-
-  #   if "Shots" in response:
-  #     shotnumber = int(response.split()[1])
+    if "Shots" in response:
+      self.shotnumber = int(response.split()[1])
       
-  #     if "Armed" in response:
-  #       acquisitionstate = True
-  #       recording = True
+      if "Armed" in response:
+        self.acquisitionstate = True
+        self.recording = True
 
-  #     if "MemB" in response:
-  #       memory = 1
+      if "MemB" in response:
+        self.memory = 1
 
-  #     #TODO class attributes STAT
-  #     return shotnumber,memory,acquisitionstate,recording 
+      #TODO class attributes STAT
+      # return shotnumber,memory,acquisitionstate,recording 
+      return 0
 
-  #   else:
-  #     return 0,0,False,False
+    else:
+      self.memory = 0
+      self.acquisitionstate = False
+      self.recording = False
+      self.shotnumber = 0
 
-  # def licel_getStatus(sock):
-  #   command = "STAT?"
-  #   response = command_to_licel(sock,command,0)
-
-  #   if "Shots" in response:
-  #     return 0
-  #   else:
-  #     print("Licel_TCPIP_GetStatus - Error 5765:", response)
-  #     return -5765
+      print("Licel_TCPIP_GetStatus - Error 5765:", response)
+      return -5765
 
   # def licel_getDatasets(sock,device,dataset,bins,memory):
   #   command = "DATA?" + " " + str(device) \
@@ -259,3 +256,10 @@ class licelcontroller:
     
   #   return data_mv
 
+  def msDelay(delay):
+    time.sleep(delay/1000) # delay on miliseconds
+
+  # def licel_waitForReady(sock,delay):
+  # # start_ms = round(time.time()*1000) # epcoch system time in ms
+  # # while(start_ms + delay > round(time.time()*1000)):
+  #   pass
