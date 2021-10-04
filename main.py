@@ -16,7 +16,7 @@ if __name__ == '__main__':
   tr=0 #first TR
   lc.selectTR(tr)
   lc.setInputRange(licelsettings.MILLIVOLT500)
-  lc.setThresholdMode(licelsettings.THRESHOLD_LOW)
+  # lc.setThresholdMode(licelsettings.THRESHOLD_LOW) #Is this necessary?
   # lc.setDiscriminatorLevel(8) # can be set between 0 and 63
   
  
@@ -54,3 +54,5 @@ if __name__ == '__main__':
   ax.grid()
   fig.savefig("test.png")
   plt.show()
+
+  lc.closeClonnection()
