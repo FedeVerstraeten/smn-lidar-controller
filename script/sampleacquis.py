@@ -298,7 +298,7 @@ if __name__ == '__main__':
   if licel_getStatus(sock) == 0:
     iCycles,iMemory,iAcq_State,iRecording = licel_parseStatus(sock) 
     if (iCycles > 1):
-      iCycles -= 2;
+      iCycles -= 2
 
   # READ FROM THE TR
 
