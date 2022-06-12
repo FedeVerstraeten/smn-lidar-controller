@@ -22,8 +22,8 @@ with open(path_json + file_json) as file:
   lidar_json = json.load(file)
 
 # lidar config
-limit_init = 100 # meters
-limit_final = 3000 # meters
+limit_init = 0 # meters
+limit_final = 30000 # meters
 
 BIN_METERS = 7.5
 bin_init = int(limit_init/BIN_METERS)
@@ -41,6 +41,7 @@ for i in lidar_json:
             })
   df=df.join(other)
 
+ # set columns meters as index
 df.index = df['meters']
 
 # making plots
