@@ -2,13 +2,13 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
-LIDAR_FILE='./analog.txt'
+LIDAR_FILE='./analog_500mV.txt'
 
 data_csv = pd.read_csv(LIDAR_FILE,sep='\n',header=None)
 data=pd.DataFrame(data_csv)
 
 y = np.array(data[0])
-y=y[10:] # offset correction
+#y=y[5:] # offset correction
 
 x = np.arange(0, len(y), 1)
 

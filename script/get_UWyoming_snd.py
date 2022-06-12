@@ -6,6 +6,9 @@ from optparse import OptionParser
 import urllib.request
 from urllib.error import URLError, HTTPError
 from bs4 import BeautifulSoup
+import pandas as pd
+import re
+from datetime import datetime
 
 # Aca habria que armar el string de request
 # poniendo las variables
@@ -81,22 +84,20 @@ pagina = gets_html(url)
 
 soup = BeautifulSoup(pagina, 'html.parser')
 
-ofilen = 'UWyoming_' + opts.year + monS + '_' + opts.stat + '.snd'
+# ofilen = 'UWyoming_' + opts.year + monS + '_' + opts.stat + '.snd'
+ofilen = 'rad_' + opts.stat + '_'
 
 Nvals = len(soup.find_all("h2"))
 print ("Found:", Nvals, " soundngs")
 
-of = open(ofilen, 'w')
 for isnd in range(Nvals):
-    of.write(soup.find_all("h2")[isnd].text.strip()+'\n')
-    of.write('\n')
-    of.write(soup.find_all("pre")[isnd*2].text.strip()+'\n')
-    of.write('\n')
-    of.write(soup.find_all("h3")[isnd].text.strip()+'\n')
-    of.write('\n')
-    of.write(soup.find_all("pre")[isnd*2+1].text.strip()+'\n')
-    of.write('\n')
+  snd_h2=soup.find_all("h2")[isnd].text.strip().split(' at ')
+  snd_time=datetime.strptime(snd_h2[1], '%HZ %d %b %Y').strftime("%Y%m%d%H")
 
-of.close()
-
-print ("Successfull writting of '" + ofilen + "' !!")
+  snd_output=ofilen + snd_time + '.dat'
+  with open(snd_output, 'w') as of:
+    itemlist=soup.find_all("pre")[isnd*2].text.split('\n')
+    outfile='\n'.join(itemlist[5:])
+    of.write(outfile)
+  
+  print ("Successfull writting of '" + snd_output + "' !!")
