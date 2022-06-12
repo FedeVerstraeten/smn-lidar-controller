@@ -55,4 +55,4 @@ if __name__ == '__main__':
   fig.savefig("test.png")
   plt.show()
 
-  lc.closeClonnection()
+  lc.closeConnection()
